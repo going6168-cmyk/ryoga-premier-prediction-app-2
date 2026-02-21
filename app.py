@@ -181,12 +181,12 @@ def calculate_poisson_probabilities(lambda_home, lambda_away, max_goals=10):
                 prob_away += p
     total = prob_home + prob_draw + prob_away
     if total == 0: return 0.33, 0.33, 0.34
-    return prob_home/total, prob_away/total, prob_draw/total
+    return float(prob_home/total), float(prob_away/total), float(prob_draw/total)
 
 # -----------------------------------------------------
 # 新規機能：Elo計算関数
 # -----------------------------------------------------
-elo_ratings = {team: 1500 for team in current_teams}
+elo_ratings = {team: 1500.0 for team in current_teams}
 K = 20
 HFA = 50 # ホームアドバンテージ
 
