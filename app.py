@@ -17,15 +17,19 @@ headers = {'X-Auth-Token': API_KEY}
 st.title("プレミアリーグ勝敗予想")
 
 # 過去5年分のデータを取得
-seasons = [2021, 2022, 2023, 2024, 2025]
-all_matches = []
+@st.cache_data(ttl=3600, show_spinner="試合データを取得しています...")
+def load_matches():
+    seasons = [2021, 2022, 2023, 2024, 2025]
+    matches = []
+    for season in seasons:
+        url = f'https://api.football-data.org/v4/competitions/PL/matches?season={season}'
+        response = requests.get(url, headers=headers)
+        if response.status_code == 200:
+            data = response.json()
+            matches.extend(data['matches'])
+    return matches
 
-for season in seasons:
-    url = f'https://api.football-data.org/v4/competitions/PL/matches?season={season}'
-    response = requests.get(url, headers=headers)
-    if response.status_code == 200:
-        data = response.json()
-        all_matches.extend(data['matches'])
+all_matches = load_matches()
 
 # DataFrame作成
 df = pd.DataFrame(all_matches)
@@ -61,9 +65,13 @@ def determine_winner(row):
 df['winner'] = df.apply(determine_winner, axis=1)
 
 # チーム情報を取得
-teams_url = 'https://api.football-data.org/v4/competitions/PL/teams'
-teams_response = requests.get(teams_url, headers=headers)
-teams_data = teams_response.json()['teams'] if teams_response.status_code == 200 else []
+@st.cache_data(ttl=86400, show_spinner="チーム情報を取得しています...")
+def load_teams():
+    teams_url = 'https://api.football-data.org/v4/competitions/PL/teams'
+    teams_response = requests.get(teams_url, headers=headers)
+    return teams_response.json()['teams'] if teams_response.status_code == 200 else []
+
+teams_data = load_teams()
 
 team_crests = {team['name']: team.get('crest', '') for team in teams_data}
 
